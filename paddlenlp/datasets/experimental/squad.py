@@ -1,14 +1,10 @@
-import copy
 import collections
 import json
 import os
-import warnings
 
 from paddle.dataset.common import md5file
 from paddle.utils.download import get_path_from_url
-from paddle.io import Dataset
 from paddlenlp.utils.env import DATA_HOME
-from paddlenlp.transformers.tokenizer_utils import _is_whitespace, _is_control, convert_to_unicode
 from . import DatasetBuilder
 
 __all__ = ['SQuAD']
@@ -16,7 +12,6 @@ __all__ = ['SQuAD']
 
 class SQuAD(DatasetBuilder):
     META_INFO = collections.namedtuple('META_INFO', ('file', 'md5', 'URL'))
-
     SPLITS = {
         'train_v1': META_INFO(
             os.path.join('train-v1.1.json'), '981b29407e0affa3b1b156f72073b945',
@@ -38,7 +33,6 @@ class SQuAD(DatasetBuilder):
         fullname = os.path.join(default_root, filename)
         if not os.path.exists(fullname) or (data_hash and
                                             not md5file(fullname) == data_hash):
-
             get_path_from_url(URL, default_root)
             fullname = os.path.join(default_root, filename)
 
