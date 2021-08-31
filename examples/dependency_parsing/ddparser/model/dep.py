@@ -19,7 +19,7 @@ from model.dropouts import SharedDropout
 from model.encoder import LSTMEncoder, LSTMByWPEncoder, ErnieEncoder
 
 
-class BiaffineParser(nn.Layer):
+class BiAffineParser(nn.Layer):
     """DDParser"""
     def __init__(self,
                  encoding_model,
@@ -33,7 +33,7 @@ class BiaffineParser(nn.Layer):
                  n_mlp_arc=500,
                  n_mlp_rel=100,
                  mlp_dropout=0.33):
-        super(BiaffineParser, self).__init__()
+        super(BiAffineParser, self).__init__()
         self.pad_index = pad_index
         self.eos_index = eos_index
 
