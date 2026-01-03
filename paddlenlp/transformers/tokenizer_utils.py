@@ -523,6 +523,7 @@ class PretrainedTokenizer(object):
     resource_files_names = {}  # keys are arguments of __init__
     pretrained_resource_files_map = {}
     padding_side = 'right'
+    chat_template = None
     pad_token_type_id = 0
     special_tokens_map_extended = {}
     _additional_special_tokens = []
@@ -808,6 +809,61 @@ class PretrainedTokenizer(object):
         all_toks = self.all_special_tokens
         all_ids = self.convert_tokens_to_ids(all_toks)
         return all_ids
+
+    def apply_chat_template(
+        self,
+        conversation,
+        chat_template=None,
+        add_generation_prompt=False,
+        tokenize=True,
+        padding=False,
+        truncation=False,
+        max_length=None,
+        return_tensors=None,
+        **kwargs,
+    ):
+        """
+        Converts a list of messages into a single string using the chat template,
+        and optionally tokenizes it.
+        """
+        if chat_template is None:
+            chat_template = getattr(self, "chat_template", None)
+
+        if chat_template is None:
+            raise ValueError(
+                "Cannot use `apply_chat_template` because no `chat_template` is defined for this tokenizer."
+            )
+
+        try:
+            import jinja2
+        except ImportError:
+            raise ImportError("apply_chat_template requires jinja2 to be installed.")
+
+        # Compile template
+        try:
+            tmpl = jinja2.Template(chat_template, trim_blocks=True, lstrip_blocks=True)
+            rendered = tmpl.render(messages=conversation, add_generation_prompt=add_generation_prompt, **kwargs)
+        except Exception as e:
+            raise ValueError(f"Error rendering chat template: {e}")
+
+        if tokenize:
+            # map arguments to paddleNLP tokenizer arguments
+            truncation_strategy = "longest_first" if truncation else "do_not_truncate"
+
+            # call tokenizer
+            # Note: PretrainedTokenizer.__call__ returns a dict if return_dict=True (default)
+            outputs = self(
+                rendered,
+                max_seq_len=max_length,
+                pad_to_max_seq_len=padding,
+                truncation_strategy=truncation_strategy,
+                return_dict=True,
+                return_tensors=return_tensors,
+                **kwargs
+            )
+            return outputs["input_ids"]
+        else:
+            return rendered
 
     def __len__(self):
         """
@@ -1101,7 +1157,11 @@ class PretrainedTokenizer(object):
                     file_path):
                 init_kwargs[args_name] = file_path
         # TODO(guosheng): avoid reduplication of position args and key word args
+        chat_template = init_kwargs.pop("chat_template", None)
         tokenizer = cls(*init_args, **init_kwargs)
+        if chat_template is not None:
+            tokenizer.chat_template = chat_template
+            tokenizer.init_config["chat_template"] = chat_template
 
         return tokenizer
 

@@ -14,8 +14,8 @@
 from functools import partial
 
 import paddle
-import paddle.fluid as fluid
-from paddle.fluid import core
+import paddle.base as fluid
+from paddle.base import core
 from paddle.optimizer import AdamW
 
 __all__ = ['AdamWDL', ]

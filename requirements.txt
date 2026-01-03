@@ -8,3 +8,4 @@ datasets
 tqdm
 paddlefsl
 sentencepiece
+jinja2

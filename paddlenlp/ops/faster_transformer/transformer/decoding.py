@@ -22,7 +22,7 @@ import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 
-from paddle.fluid.layer_helper import LayerHelper
+from paddle.base.layer_helper import LayerHelper
 import paddle
 import paddlenlp
 from paddlenlp.ops.ext_utils import load, LOADED_EXT
@@ -590,7 +590,7 @@ def transfer_param(p, is_bias=False, dtype="float16", restore_data=False):
             new_p = type(p)(shape=param_shape, dtype=dtype, is_bias=is_bias)
             new_p.value().get_tensor().set(
                 param_data.astype(dtype),
-                paddle.fluid.framework._current_expected_place())
+                paddle.base.framework._current_expected_place())
             return new_p
         else:
             param_data = np.array(paddle.static.global_scope().find_var(p.name)
@@ -1287,7 +1287,7 @@ class FTParaConf(object):
             # TODO(guosheng): If `w.place `can be used here, use `w.place` to
             # avoid w.place and _current_expected_place are different.
             w.value().get_tensor().set(
-                w_slice, paddle.fluid.framework._current_expected_place())
+                w_slice, paddle.base.framework._current_expected_place())
             return w
         else:
             return w_slice
