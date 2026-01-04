@@ -22,7 +22,7 @@ import inspect
 from shutil import copyfile
 
 import paddle
-import paddle.fluid.core as core
+import paddle.base.core as core
 from paddle.nn import Layer
 # TODO(fangzeyang) Temporary fix and replace by paddle framework downloader later
 from paddlenlp.utils.downloader import get_path_from_url, COMMUNITY_MODEL_PREFIX

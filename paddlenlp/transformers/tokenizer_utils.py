@@ -523,6 +523,7 @@ class PretrainedTokenizer(object):
     resource_files_names = {}  # keys are arguments of __init__
     pretrained_resource_files_map = {}
     padding_side = 'right'
+    chat_template = None
     pad_token_type_id = 0
     special_tokens_map_extended = {}
     _additional_special_tokens = []
@@ -1101,7 +1102,11 @@ class PretrainedTokenizer(object):
                     file_path):
                 init_kwargs[args_name] = file_path
         # TODO(guosheng): avoid reduplication of position args and key word args
+        chat_template = init_kwargs.pop("chat_template", None)
         tokenizer = cls(*init_args, **init_kwargs)
+        if chat_template is not None:
+            tokenizer.chat_template = chat_template
+            tokenizer.init_config["chat_template"] = chat_template
 
         return tokenizer
 

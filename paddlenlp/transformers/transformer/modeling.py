@@ -3,7 +3,7 @@ import numpy as np
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-from paddle.fluid.layers.utils import map_structure
+from paddle.utils import map_structure
 
 __all__ = [
     "position_encoding_init", "WordEmbedding", "PositionalEmbedding",
@@ -620,7 +620,7 @@ class TransformerModel(nn.Layer):
     The Transformer model.
 
     This model is a Paddle `paddle.nn.Layer <https://www.paddlepaddle.org.cn/documentation
-    /docs/en/api/paddle/fluid/dygraph/layers/Layer_en.html>`__ subclass. Use it as a regular Paddle Layer
+    /docs/en/api/paddle.base/dygraph/layers/Layer_en.html>`__ subclass. Use it as a regular Paddle Layer
     and refer to the Paddle documentation for all matter related to general usage and behavior.
 
     Args:
