@@ -810,61 +810,6 @@ class PretrainedTokenizer(object):
         all_ids = self.convert_tokens_to_ids(all_toks)
         return all_ids
 
-    def apply_chat_template(
-        self,
-        conversation,
-        chat_template=None,
-        add_generation_prompt=False,
-        tokenize=True,
-        padding=False,
-        truncation=False,
-        max_length=None,
-        return_tensors=None,
-        **kwargs,
-    ):
-        """
-        Converts a list of messages into a single string using the chat template,
-        and optionally tokenizes it.
-        """
-        if chat_template is None:
-            chat_template = getattr(self, "chat_template", None)
-
-        if chat_template is None:
-            raise ValueError(
-                "Cannot use `apply_chat_template` because no `chat_template` is defined for this tokenizer."
-            )
-
-        try:
-            import jinja2
-        except ImportError:
-            raise ImportError("apply_chat_template requires jinja2 to be installed.")
-
-        # Compile template
-        try:
-            tmpl = jinja2.Template(chat_template, trim_blocks=True, lstrip_blocks=True)
-            rendered = tmpl.render(messages=conversation, add_generation_prompt=add_generation_prompt, **kwargs)
-        except Exception as e:
-            raise ValueError(f"Error rendering chat template: {e}")
-
-        if tokenize:
-            # map arguments to paddleNLP tokenizer arguments
-            truncation_strategy = "longest_first" if truncation else "do_not_truncate"
-
-            # call tokenizer
-            # Note: PretrainedTokenizer.__call__ returns a dict if return_dict=True (default)
-            outputs = self(
-                rendered,
-                max_seq_len=max_length,
-                pad_to_max_seq_len=padding,
-                truncation_strategy=truncation_strategy,
-                return_dict=True,
-                return_tensors=return_tensors,
-                **kwargs
-            )
-            return outputs["input_ids"]
-        else:
-            return rendered
-
     def __len__(self):
         """
         Size of the full vocabulary with the added tokens.
