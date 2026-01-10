@@ -14,6 +14,7 @@
 
 import math
 import sys
+import collections
 from collections import defaultdict
 
 import paddle
@@ -26,17 +27,13 @@ __all__ = ["BLEU", "BLEUForDuReader"]
 def get_match_size(cand_ngram, refs_ngram):
     ref_set = defaultdict(int)
     for ref_ngram in refs_ngram:
-        tmp_ref_set = defaultdict(int)
-        for ngram in ref_ngram:
-            tmp_ref_set[tuple(ngram)] += 1
+        tmp_ref_set = collections.Counter(tuple(ngram) for ngram in ref_ngram)
         for ngram, count in tmp_ref_set.items():
-            ref_set[tuple(ngram)] = max(ref_set[tuple(ngram)], count)
-    cand_set = defaultdict(int)
-    for ngram in cand_ngram:
-        cand_set[tuple(ngram)] += 1
+            ref_set[ngram] = max(ref_set[ngram], count)
+    cand_set = collections.Counter(tuple(ngram) for ngram in cand_ngram)
     match_size = 0
     for ngram, count in cand_set.items():
-        match_size += min(count, ref_set.get(tuple(ngram), 0))
+        match_size += min(count, ref_set.get(ngram, 0))
     cand_size = len(cand_ngram)
     return match_size, cand_size
 
