@@ -158,11 +158,16 @@ class Pad(object):
             shape=ret_shape,
             fill_value=self._pad_val,
             dtype=arrs[0].dtype if self._dtype is None else self._dtype)
+
+        # Pre-calculate slice template for performance
+        ndim = arrs[0].ndim
+        template_slices = [slice(None)] * ndim
+
         for i, arr in enumerate(arrs):
             if arr.shape[self._axis] == max_size:
                 ret[i] = arr
             else:
-                slices = [slice(None) for _ in range(arr.ndim)]
+                slices = list(template_slices)
                 if self._pad_right:
                     slices[self._axis] = slice(0, arr.shape[self._axis])
                 else:
@@ -170,8 +175,7 @@ class Pad(object):
                                                max_size)
 
                 if slices[self._axis].start != slices[self._axis].stop:
-                    slices = [slice(i, i + 1)] + slices
-                    ret[tuple(slices)] = arr
+                    ret[i][tuple(slices)] = arr
         if self._ret_length:
             return ret, np.asarray(
                 original_length,
