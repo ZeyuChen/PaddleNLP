@@ -14,7 +14,7 @@
 
 import math
 import sys
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 import paddle
 
@@ -26,29 +26,19 @@ __all__ = ["BLEU", "BLEUForDuReader"]
 def get_match_size(cand_ngram, refs_ngram):
     ref_set = defaultdict(int)
     for ref_ngram in refs_ngram:
-        tmp_ref_set = defaultdict(int)
-        for ngram in ref_ngram:
-            tmp_ref_set[tuple(ngram)] += 1
+        tmp_ref_set = Counter(map(tuple, ref_ngram))
         for ngram, count in tmp_ref_set.items():
-            ref_set[tuple(ngram)] = max(ref_set[tuple(ngram)], count)
-    cand_set = defaultdict(int)
-    for ngram in cand_ngram:
-        cand_set[tuple(ngram)] += 1
+            ref_set[ngram] = max(ref_set[ngram], count)
+    cand_set = Counter(map(tuple, cand_ngram))
     match_size = 0
     for ngram, count in cand_set.items():
-        match_size += min(count, ref_set.get(tuple(ngram), 0))
+        match_size += min(count, ref_set[ngram])
     cand_size = len(cand_ngram)
     return match_size, cand_size
 
 
 def get_ngram(sent, n_size, label=None):
-    def _ngram(sent, n_size):
-        ngram_list = []
-        for left in range(len(sent) - n_size):
-            ngram_list.append(sent[left:left + n_size + 1])
-        return ngram_list
-
-    ngram_list = _ngram(sent, n_size)
+    ngram_list = [sent[left:left + n_size + 1] for left in range(len(sent) - n_size)]
     if label is not None:
         ngram_list = [ngram + '_' + label for ngram in ngram_list]
     return ngram_list
