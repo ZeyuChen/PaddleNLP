@@ -16,15 +16,19 @@ def extract_tp_actual_correct(y_true, y_pred, suffix, *args):
 
     target_names = sorted(set(entities_true.keys()) | set(entities_pred.keys()))
 
-    tp_sum = np.array([], dtype=np.int32)
-    pred_sum = np.array([], dtype=np.int32)
-    true_sum = np.array([], dtype=np.int32)
+    tp_sum = []
+    pred_sum = []
+    true_sum = []
     for type_name in target_names:
         entities_true_type = entities_true.get(type_name, set())
         entities_pred_type = entities_pred.get(type_name, set())
-        tp_sum = np.append(tp_sum, len(entities_true_type & entities_pred_type))
-        pred_sum = np.append(pred_sum, len(entities_pred_type))
-        true_sum = np.append(true_sum, len(entities_true_type))
+        tp_sum.append(len(entities_true_type & entities_pred_type))
+        pred_sum.append(len(entities_pred_type))
+        true_sum.append(len(entities_true_type))
+
+    tp_sum = np.array(tp_sum, dtype=np.int32)
+    pred_sum = np.array(pred_sum, dtype=np.int32)
+    true_sum = np.array(true_sum, dtype=np.int32)
 
     return pred_sum, tp_sum, true_sum
 
