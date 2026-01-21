@@ -442,22 +442,31 @@ class GPTTokenizer(PretrainedTokenizer):
             first, second = bigram
             new_word = []
             i = 0
-            while i < len(word):
-                try:
-                    j = word.index(first, i)
-                    new_word.extend(word[i:j])
-                    i = j
-                except:
-                    new_word.extend(word[i:])
-                    break
+            if len(word) <= 50:
+                while i < len(word):
+                    if i < len(word) - 1 and word[i] == first and word[i +
+                                                                       1] == second:
+                        new_word.append(first + second)
+                        i += 2
+                    else:
+                        new_word.append(word[i])
+                        i += 1
+            else:
+                while i < len(word):
+                    try:
+                        j = word.index(first, i)
+                        new_word.extend(word[i:j])
+                        i = j
+                    except:
+                        new_word.extend(word[i:])
+                        break
 
-                if word[i] == first and i < len(word) - 1 and word[i +
-                                                                   1] == second:
-                    new_word.append(first + second)
-                    i += 2
-                else:
-                    new_word.append(word[i])
-                    i += 1
+                    if i < len(word) - 1 and word[i + 1] == second:
+                        new_word.append(first + second)
+                        i += 2
+                    else:
+                        new_word.append(word[i])
+                        i += 1
             new_word = tuple(new_word)
             word = new_word
             if len(word) == 1:
