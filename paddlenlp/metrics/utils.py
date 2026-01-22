@@ -16,25 +16,51 @@ import numpy as np
 
 
 def default_trans_func(output, label, seq_mask, vocab):
-    seq_mask = np.expand_dims(seq_mask, axis=2).repeat(output.shape[2], axis=2)
-    output = output * seq_mask
-    idx = np.argmax(output, axis=2)
+    # Optimization: Use broadcasting and vectorized operations instead of
+    # inefficient loops and large array repetitions.
+
+    # Ensure mask is (batch, seq_len, 1) for broadcasting
+    if seq_mask.ndim == 2:
+        mask_expanded = np.expand_dims(seq_mask, axis=2)
+    else:
+        mask_expanded = seq_mask
+
+    # Broadcast multiply to mask output.
+    # avoids allocating huge memory for repeated mask
+    output = output * mask_expanded
+
+    idx = np.argmax(output, axis=2)  # (batch, seq_len)
+
     cand, ref_list = [], []
+
+    # label is (batch, seq_len, 1) usually. Squeeze to (batch, seq_len)
+    if label.ndim == 3:
+        label = np.squeeze(label, axis=2)
+
+    # Calculate lengths from mask (assuming padding at the end)
+    # Sum over seq_len (axis 1) -> (batch, 1) or (batch,)
+    lengths = np.sum(mask_expanded, axis=1).flatten().astype(int)
+
     for i in range(idx.shape[0]):
-        token_list = []
-        for j in range(idx.shape[1]):
-            if seq_mask[i][j][0] == 0:
-                break
-            token_list.append(vocab[idx[i][j]])
+        length = lengths[i]
+
+        # Slicing is faster than looping with check
+        seq_idx = idx[i, :length]
+        seq_label = label[i, :length]
+
+        # Convert to tokens
+        # Using list comprehension
+        try:
+            token_list = [vocab[x] for x in seq_idx]
+        except KeyError:
+            # Fallback/retry with int conversion if numpy scalar fails
+            token_list = [vocab[int(x)] for x in seq_idx]
         cand.append(token_list)
 
-    label = np.squeeze(label, axis=2)
-    for i in range(label.shape[0]):
-        token_list = []
-        for j in range(label.shape[1]):
-            if seq_mask[i][j][0] == 0:
-                break
-            token_list.append(vocab[label[i][j]])
+        try:
+            token_list_label = [vocab[x] for x in seq_label]
+        except KeyError:
+            token_list_label = [vocab[int(x)] for x in seq_label]
+        ref_list.append([token_list_label])
 
-        ref_list.append([token_list])
     return cand, ref_list
