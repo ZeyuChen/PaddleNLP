@@ -1,0 +1,3 @@
+## 2024-05-21 - Broken Environment & Performance Anti-patterns
+**Learning:** The codebase relies on `paddle.fluid` which is deprecated in modern PaddlePaddle versions, causing widespread import errors and preventing the full test suite from running. Additionally, `np.append` usage inside loops (O(N^2) complexity) is a recurring anti-pattern found in both core library metrics and example scripts.
+**Action:** Use isolated reproduction scripts (mocking dependencies where necessary) to verify changes instead of the full test suite. Target `np.append` loops for high-impact, low-risk performance optimizations.

@@ -16,15 +16,19 @@ def extract_tp_actual_correct(y_true, y_pred, suffix, *args):
 
     target_names = sorted(set(entities_true.keys()) | set(entities_pred.keys()))
 
-    tp_sum = np.array([], dtype=np.int32)
-    pred_sum = np.array([], dtype=np.int32)
-    true_sum = np.array([], dtype=np.int32)
+    tp_sum_list = []
+    pred_sum_list = []
+    true_sum_list = []
     for type_name in target_names:
         entities_true_type = entities_true.get(type_name, set())
         entities_pred_type = entities_pred.get(type_name, set())
-        tp_sum = np.append(tp_sum, len(entities_true_type & entities_pred_type))
-        pred_sum = np.append(pred_sum, len(entities_pred_type))
-        true_sum = np.append(true_sum, len(entities_true_type))
+        tp_sum_list.append(len(entities_true_type & entities_pred_type))
+        pred_sum_list.append(len(entities_pred_type))
+        true_sum_list.append(len(entities_true_type))
+
+    tp_sum = np.array(tp_sum_list, dtype=np.int32)
+    pred_sum = np.array(pred_sum_list, dtype=np.int32)
+    true_sum = np.array(true_sum_list, dtype=np.int32)
 
     return pred_sum, tp_sum, true_sum
 
@@ -119,11 +123,12 @@ class ChunkEvaluator(paddle.metric.Metric):
         return num_infer_chunks, num_label_chunks, num_correct_chunks
 
     def _is_number_or_matrix(self, var):
+
         def _is_number_(var):
-            return isinstance(
-                var, int) or isinstance(var, np.int64) or isinstance(
-                    var, float) or (isinstance(var, np.ndarray) and
-                                    var.shape == (1, ))
+            return isinstance(var,
+                              int) or isinstance(var, np.int64) or isinstance(
+                                  var, float) or (isinstance(var, np.ndarray)
+                                                  and var.shape == (1, ))
 
         return _is_number_(var) or isinstance(var, np.ndarray)
 
@@ -171,8 +176,9 @@ class ChunkEvaluator(paddle.metric.Metric):
             self.num_infer_chunks) if self.num_infer_chunks else 0.
         recall = float(self.num_correct_chunks /
                        self.num_label_chunks) if self.num_label_chunks else 0.
-        f1_score = float(2 * precision * recall / (
-            precision + recall)) if self.num_correct_chunks else 0.
+        f1_score = float(
+            2 * precision * recall /
+            (precision + recall)) if self.num_correct_chunks else 0.
         return precision, recall, f1_score
 
     def reset(self):
