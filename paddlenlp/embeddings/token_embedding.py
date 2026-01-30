@@ -133,8 +133,8 @@ class TokenEmbedding(nn.Embedding):
         self._idx_to_word.append(PAD_TOKEN)
         self._word_to_idx = self._construct_word_to_idx(self._idx_to_word)
         # insert unk, pad embedding
-        embedding_table = np.append(
-            vector_np['embedding'], [unk_vector, pad_vector], axis=0)
+        embedding_table = np.concatenate(
+            (vector_np['embedding'], [unk_vector, pad_vector]), axis=0)
 
         return embedding_table
 
@@ -183,30 +183,32 @@ class TokenEmbedding(nn.Embedding):
         pretrained_vocab_intersect_index = [
             pretrained_word_to_idx[word] for word in vocab_intersection
         ]
-        pretrained_vocab_subtract_index = [
-            pretrained_word_to_idx[word] for word in vocab_subtraction
-        ]
         extend_vocab_intersect_index = [
             self._word_to_idx[word] for word in vocab_intersection
         ]
         embedding_table[
             extend_vocab_intersect_index] = pretrained_embedding_table[
                 pretrained_vocab_intersect_index]
+
+        # Collect additional parts to append
+        append_list = []
+
         if not keep_extended_vocab_only:
+            pretrained_vocab_subtract_index = [
+                pretrained_word_to_idx[word] for word in vocab_subtraction
+            ]
             for idx in pretrained_vocab_subtract_index:
                 word = pretrained_idx_to_word[idx]
                 self._idx_to_word.append(word)
                 self._word_to_idx[word] = len(self._idx_to_word) - 1
 
-            embedding_table = np.append(
-                embedding_table,
-                pretrained_embedding_table[pretrained_vocab_subtract_index],
-                axis=0)
+            append_list.append(
+                pretrained_embedding_table[pretrained_vocab_subtract_index])
 
         if self.unknown_token not in extend_vocab_set:
             self._idx_to_word.append(self.unknown_token)
             self._word_to_idx[self.unknown_token] = len(self._idx_to_word) - 1
-            embedding_table = np.append(embedding_table, [unk_vector], axis=0)
+            append_list.append([unk_vector])
         else:
             unk_idx = self._word_to_idx[self.unknown_token]
             embedding_table[unk_idx] = unk_vector
@@ -214,9 +216,13 @@ class TokenEmbedding(nn.Embedding):
         if PAD_TOKEN not in extend_vocab_set:
             self._idx_to_word.append(PAD_TOKEN)
             self._word_to_idx[PAD_TOKEN] = len(self._idx_to_word) - 1
-            embedding_table = np.append(embedding_table, [pad_vector], axis=0)
+            append_list.append([pad_vector])
         else:
             embedding_table[self._word_to_idx[PAD_TOKEN]] = pad_vector
+
+        if append_list:
+            embedding_table = np.concatenate(
+                [embedding_table] + append_list, axis=0)
 
         logger.info("Finish extending vocab.")
         return embedding_table
