@@ -19,6 +19,7 @@ import copy
 import io
 import json
 import os
+import re
 import six
 import unicodedata
 from collections import OrderedDict, UserDict
@@ -463,24 +464,34 @@ class Trie:
         return tokens
 
 
+_CJK_PATTERN = re.compile(
+    r'['
+    r'\u4E00-\u9FFF'
+    r'\u3400-\u4DBF'
+    r'\U00020000-\U0002A6DF'
+    r'\U0002A700-\U0002B73F'
+    r'\U0002B740-\U0002B81F'
+    r'\U0002B820-\U0002CEAF'
+    r'\uF900-\uFAFF'
+    r'\U0002F800-\U0002FA1F'
+    r']'
+    r'|'
+    r'[^'
+    r'\u4E00-\u9FFF'
+    r'\u3400-\u4DBF'
+    r'\U00020000-\U0002A6DF'
+    r'\U0002A700-\U0002B73F'
+    r'\U0002B740-\U0002B81F'
+    r'\U0002B820-\U0002CEAF'
+    r'\uF900-\uFAFF'
+    r'\U0002F800-\U0002FA1F'
+    r']+'
+)
+
+
 def tokenize_chinese_chars(text):
     """Adds whitespace around any CJK character."""
-    output = []
-    buff = ""
-    for char in text:
-        cp = ord(char)
-        if is_chinese_char(cp):
-            if buff != "":
-                output.append(buff)
-                buff = ""
-            output.append(char)
-        else:
-            buff += char
-
-    if buff != "":
-        output.append(buff)
-
-    return output
+    return _CJK_PATTERN.findall(text)
 
 
 @six.add_metaclass(InitTrackerMeta)
