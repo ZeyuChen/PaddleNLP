@@ -19,6 +19,7 @@ import copy
 import io
 import json
 import os
+import re
 import six
 import unicodedata
 from collections import OrderedDict, UserDict
@@ -42,7 +43,8 @@ from collections import OrderedDict
 
 __all__ = [
     'PretrainedTokenizer', 'BPETokenizer', 'tokenize_chinese_chars',
-    'is_chinese_char', 'normalize_chars', 'tokenize_special_chars'
+    'is_chinese_char', 'normalize_chars', 'tokenize_special_chars',
+    'tokenize_chinese_chars_fast'
 ]
 
 
@@ -481,6 +483,37 @@ def tokenize_chinese_chars(text):
         output.append(buff)
 
     return output
+
+
+_chinese_char_range = (
+    r'\u4E00-\u9FFF'
+    r'\u3400-\u4DBF'
+    r'\U00020000-\U0002A6DF'
+    r'\U0002A700-\U0002B73F'
+    r'\U0002B740-\U0002B81F'
+    r'\U0002B820-\U0002CEAF'
+    r'\uF900-\uFAFF'
+    r'\U0002F800-\U0002FA1F'
+)
+_regex_chinese_char_chunk = re.compile(
+    r'([' + _chinese_char_range + r']+)|([^' + _chinese_char_range + r']+)'
+)
+
+
+def tokenize_chinese_chars_fast(text):
+    """
+    Adds whitespace around any CJK character.
+    This is a faster implementation of `tokenize_chinese_chars` that returns a string.
+    """
+    output = []
+    for c, n in _regex_chinese_char_chunk.findall(text):
+        if c:
+            output.append(" ")
+            output.append("  ".join(c))
+            output.append(" ")
+        else:
+            output.append(n)
+    return "".join(output)
 
 
 @six.add_metaclass(InitTrackerMeta)

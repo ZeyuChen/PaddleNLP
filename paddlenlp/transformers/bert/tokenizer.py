@@ -18,7 +18,7 @@ import os
 import unicodedata
 
 from .. import PretrainedTokenizer, AddedToken
-from ..tokenizer_utils import convert_to_unicode, whitespace_tokenize, _is_whitespace, _is_control, _is_punctuation
+from ..tokenizer_utils import convert_to_unicode, whitespace_tokenize, _is_whitespace, _is_control, _is_punctuation, tokenize_chinese_chars_fast
 
 __all__ = [
     'BasicTokenizer',
@@ -119,16 +119,7 @@ class BasicTokenizer(object):
         """
         Adds whitespace around any CJK character.
         """
-        output = []
-        for char in text:
-            cp = ord(char)
-            if self._is_chinese_char(cp):
-                output.append(" ")
-                output.append(char)
-                output.append(" ")
-            else:
-                output.append(char)
-        return "".join(output)
+        return tokenize_chinese_chars_fast(text)
 
     def _is_chinese_char(self, cp):
         """
