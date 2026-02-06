@@ -1,0 +1,3 @@
+## 2025-02-18 - [Chinese Tokenization Optimization]
+**Learning:** Python loops over characters are extremely slow compared to Regex, especially for character classification. However, `re.sub` can be slow if it generates many small string replacements. The optimal strategy for character-level tokenization (e.g. adding spaces) is to find chunks of "contiguous same-class characters" using `re.findall` and process chunks in bulk.
+**Action:** When optimizing tokenizers or string processors, look for `for char in text` loops. Replace them with regex `findall` that captures sequences of interest, then join the results. This provided ~12x speedup for English and ~1.5x for Chinese/Mixed text.
